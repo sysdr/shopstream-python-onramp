@@ -1,0 +1,5 @@
+# The Dockerfile most people write first. It works, which is the problem: nothing tells you what it costs.
+FROM python:3.12
+COPY . .
+RUN pip install -r requirements-dev.txt
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

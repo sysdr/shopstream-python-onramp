@@ -1,0 +1,2 @@
+ALTER TABLE orders ADD COLUMN discount_code TEXT;
+ALTER TABLE orders ADD COLUMN total NUMERIC(10, 2);

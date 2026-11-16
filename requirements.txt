@@ -1,0 +1,6 @@
+# What the API needs to run. Pinned, so every build installs exactly these versions.
+fastapi==0.115.6
+uvicorn==0.34.0
+psycopg[binary]==3.2.3
+psycopg-pool==3.2.4
+gunicorn==23.0.0

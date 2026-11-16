@@ -1,0 +1,42 @@
+# ShopStream API, Day 6: production settings. Secrets come from .env (written by start.sh, never committed).
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      POSTGRES_DB: shopstream
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shop -d shopstream"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    restart: unless-stopped
+  api:
+    build: {context: ., target: runtime}
+    image: shopstream-api:day6
+    environment:
+      DATABASE_URL: postgresql://shop:${DB_PASSWORD}@db:5432/shopstream
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+    depends_on:
+      db: {condition: service_healthy}
+    ports: ["8201:8000"]
+    restart: unless-stopped
+  tools:
+    build: {context: ., target: dev}
+    image: shopstream-api:day6-dev
+    profiles: ["tools"]
+    working_dir: /srv/tools
+    environment:
+      DATABASE_URL: postgresql://shop:${DB_PASSWORD}@db:5432/shopstream
+    depends_on: [api]
+    command: ["python", "-c", "print('tools')"]
+  # A Cloudflare quick tunnel: a temporary public https URL for your local API. No account needed.
+  tunnel:
+    image: cloudflare/cloudflared:2024.12.2
+    profiles: ["public"]
+    command: ["tunnel", "--no-autoupdate", "--url", "http://api:8000"]
+    depends_on: [api]
+volumes:
+  pgdata:
